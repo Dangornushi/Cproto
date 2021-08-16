@@ -1,0 +1,14 @@
+fn sub(str a) -> int:
+    put a;
+    return 0;
+end;
+
+
+fn main(void) -> int :
+    int x = 9;
+    while x < 12:
+        int x = x + 1;
+        put x;
+    end;
+    return 0;
+end;
