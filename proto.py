@@ -366,4 +366,4 @@ if __name__ == "__main__":
     args = ['g++','-o', sys.argv[1].split(".")[0], sys.argv[1]+".cpp"]
     subprocess.check_output(args)
     args = ["rm",sys.argv[1]+".cpp"]
-    #subprocess.check_output(args)
+    subprocess.check_output(args)
