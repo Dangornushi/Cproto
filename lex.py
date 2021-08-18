@@ -44,6 +44,8 @@ tokens = (
     "VOID",
     "ARROW",
     "LOOP",
+    "AT",
+    "PUB",
 )
 
 t_CONMA = r","
@@ -65,6 +67,7 @@ t_SEMI = r"\;"
 t_DAINARI = r"\>"
 t_SYOUNARI = r"\<"
 t_ARROW = r"\-\>"
+t_AT = r"\@"
 
 #t_QOT = r"\""
 #t_OR = r"\|\|"
@@ -75,7 +78,7 @@ def t_STR (t):
     return t
 
 def t_ID (t):
-    r"[@a-zA-Z\_][a-zA-Z0-9_|\&]*"
+    r"[a-zA-Z\_][a-zA-Z0-9_|\&]*"
     if t.value == "int":
         t.type = "TYPE"
     elif t.value == "str":#t.value == "float" or 
@@ -130,6 +133,8 @@ def t_ID (t):
         t.type = "PASS"
     elif t.value == "loop":
         t.type = "LOOP"
+    elif t.value == "public":
+        t.type = "PUB";
     else:
         t.type == "ID"
     return t

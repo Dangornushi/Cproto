@@ -1,14 +1,15 @@
-fn sub(str a) -> int:
-    put a;
-    return 0;
+
+class Main:
+    @public;
+    fn klass(void) -> int :
+        str ok = "OK";
+        put ok;
+        return 0;
+    end;
 end;
 
-
 fn main(void) -> int :
-    int x = 9;
-    while x < 12:
-        int x = x + 1;
-        put x;
-    end;
+    str d = "dangomushi";
+    put d[0];
     return 0;
 end;

@@ -41,6 +41,7 @@ def p_paramlist(p):
 def p_args(p):
     """
     args : ID
+         | VOID
          | args CONMA ID
     """
     # ! important point!
@@ -64,13 +65,13 @@ def p_sent_shiki(p):
           | NUMBER
     """
     p[0] = ("shiki", p[1])
-
 def p_shiki_calc(p):
     """
     shiki : shiki PLUS shiki
           | shiki MINUS shiki
           | shiki KAKERU shiki
           | shiki WARU shiki
+          | ID LKAKKO shiki LKOKKA 
     """
     if p[2] == "+": 
         p[0] = ("add", p[1], p[2], p[3])
@@ -80,6 +81,14 @@ def p_shiki_calc(p):
         p[0] = ("mul", p[1], p[2], p[3])
     elif p[2] == "*":
         p[0] = ("div", p[1], p[2], p[3])
+    else:
+        p[0] = ("char", p[1], p[3])
+
+def p_sent_class(p):
+    """
+    sent : CLASS ID COLON sents END SEMI 
+    """
+    p[0] = ("defclass", p[2], p[4])
 
 def p_sent_defunc(p):
     """
@@ -131,6 +140,12 @@ def p_sent_defvall(p):
     """
     p[0] = ("mov", p[1], p[2], p[4])
 
+def p_sent_inst(p):
+    """
+    sent : CLASS ID EQOL AT ID KAKKO args KOKKA SEMI
+    """
+    p[0] = ( "inst", p[2], p[5], p[7])
+
 def p_sent_pass(p):
     """
     sent : PASS SEMI
@@ -142,12 +157,24 @@ def p_sent_put(p):
     sent : PUT shiki SEMI
     """
     p[0] = ( "put", p[2] )
-    
+
+def p_sent_public(p):
+    """
+    sent : AT PUB SEMI
+    """
+    p[0] = "pub"
+
 def p_sent_call(p):
     """
     sent : ID KAKKO args KOKKA SEMI
     """
     p[0] = ( "call", p[1], p[3])
+
+def p_sent_class_call(p):
+    """
+    sent : ID PIRIOD ID KAKKO args KOKKA SEMI
+    """
+    p[0] = ( "class_call", p[1], p[3], p[5])
 
 def p_sent_return(p):
     """
@@ -162,6 +189,9 @@ parser = yacc.yacc(debug=0, write_tables=0)
 
 funcname = ""
 nowvall = ""
+now = ""
+
+public = False
 
 datalis = []
 includes = []
@@ -181,7 +211,7 @@ class Walker:
                 fout.write(x)
 
     def steps(self, ast):
-        global funcname, nowvall
+        global funcname, nowvall, now
 
         arg = ""
 
@@ -192,14 +222,34 @@ class Walker:
                 #TODO : 引数単数と複数の処理 ->　argに格納
                 if ast[2][0] == "str":
                     arg = "std::string "+ast[2][1]
-
             self.append(ast[3] + " " + ast[1] + "(" + arg + ") { " )
             self.steps(ast[4])
             self.append("}\n")
         
+        elif ast[0] == "defclass":
+            now = ast[1]+"::"
+            self.append("class "+ast[1]+" { ")
+            self.steps(ast[2])
+            self.append("};\n");
+            now = ""
+        
+        elif ast[0] == "pub":
+            public = True
+            self.append("public: ")
+            self.steps(ast[1:])
+        
+        elif ast[0] == "inst":
+            self.append(ast[2]+" "+ast[1]+"; ");
+
         elif ast[0] == "call":
             self.append(ast[1]+"("+ast[2]+"); ")
         
+        elif ast[0] == "class_call":
+            if ast[3] == "void":
+                self.append(ast[1]+"."+ast[2]+"("+"); ")
+            else:
+                self.append(ast[1]+"."+ast[2]+"("+ast[3]+"); ")
+
         elif ast[0] == "if":
             self.steps(ast[1])
             self.append("if "+nowvall+" { ")
@@ -245,6 +295,10 @@ class Walker:
                 mode = ""
 
             self.append(mode+ast[2]+" = "+nowvall+"; ")
+        
+        elif ast[0] == "char":
+            self.steps(ast[2])
+            nowvall = ast[1]+"["+nowvall+"]"
 
         elif ast[0] == "put":
             if "iostream" in includes:
@@ -365,5 +419,11 @@ if __name__ == "__main__":
             walker.file_write()
     args = ['g++','-o', sys.argv[1].split(".")[0], sys.argv[1]+".cpp"]
     subprocess.check_output(args)
-    args = ["rm",sys.argv[1]+".cpp"]
-    subprocess.check_output(args)
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "-ne":
+            pass
+        else:
+            pass
+    else:
+        args = ["rm",sys.argv[1]+".cpp"]
+        subprocess.check_output(args)
